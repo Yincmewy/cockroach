@@ -8,7 +8,7 @@
 | Minecraft | 1.20.1 |
 | Forge | 47.4.23 或更高的 47.x 版本 |
 | Java | 17 |
-| 渲染依赖 | Model Loader0 1.0.5，已内置 |
+| 渲染依赖 | 洛谔谔的 [Model Loader0 1.0.5](https://modrinth.com/mod/model-loader0)，已内置 |
 
 ## 主要功能
 
@@ -27,7 +27,9 @@
 3. 将这个 JAR 放入游戏实例的 `mods` 文件夹，移除旧版蟑螂模组并重启游戏。
 4. 多人游戏时，客户端和服务端均安装同一版本的一体包。
 
-**不需要单独安装 Model Loader0**：原始依赖 JAR 已通过 Forge Jar-in-Jar 内置。`cockroach-1.5.1-slim.jar` 是不含内置依赖的开发包，日常游玩请使用不带 `-slim` 的版本。
+本模组的模型加载前置来自 **洛谔谔（Luoee）** 的 [Model Loader0](https://modrinth.com/mod/model-loader0)，感谢原作者提供的模型加载支持。
+
+**不需要单独安装 Model Loader0**：1.0.5 版原始依赖 JAR 已通过 Forge Jar-in-Jar 内置。`cockroach-1.5.1-slim.jar` 是不含内置依赖的开发包，日常游玩请使用不带 `-slim` 的版本。
 
 不要同时保留多个版本的蟑螂模组。如果之前仅为本模组安装了独立 Model Loader0，可移走那一份；其他模组也依赖它时，请先检查版本兼容性。
 
@@ -237,7 +239,7 @@ gradle/wrapper/         Gradle Wrapper
 模组代码当前按项目元数据声明为 **保留所有权利（All Rights Reserved）**。模型及第三方组件分别遵循其自身许可。
 
 - **蟑螂模型**：原作者 [CK](https://sketchfab.com/xcellf)，[原始作品](https://sketchfab.com/3d-models/cockroach-cead55b8aa8643d48d67240bad028592)，许可为 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)。原始 GLB 保持不变，低模、可活动飞行模型和步行动画缓存为注明修改的衍生资源，保留原作者署名与许可。
-- **Model Loader0 1.0.5**：作者 Luoee，MIT 许可，通过 Forge Jar-in-Jar 内置原始 JAR，不做类合并或修改。
+- **[Model Loader0 1.0.5](https://modrinth.com/mod/model-loader0)**：作者 **洛谔谔（Luoee）**，MIT 许可，通过 Forge Jar-in-Jar 内置原始 JAR，不做类合并或修改。
 - **meshoptimizer 1.2.0**：作者 Arseny Kapoulkine，MIT 许可，仅用于模型生成工具。
 
 完整说明见 [模型署名](src/main/resources/MODEL_CREDITS.md) 和 [第三方组件声明](src/main/resources/THIRD_PARTY_NOTICES.md)，两份声明也包含在模组安装包内。
