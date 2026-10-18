@@ -1,0 +1,14 @@
+[
+  {
+    "name": "medium",
+    "triangles": 3983,
+    "vertices": 2445,
+    "relativeError": 0.00244095828384161
+  },
+  {
+    "name": "low",
+    "triangles": 794,
+    "vertices": 567,
+    "relativeError": 0.008915816433727741
+  }
+]

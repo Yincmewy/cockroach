@@ -1,0 +1,19 @@
+{
+  "entity.cockroach.cockroach": "蟑螂",
+  "entity.cockroach.rainbow_lightning": "彩色雷电",
+  "item.cockroach.cockroach_converter": "蟑螂棒",
+  "item.cockroach.cockroach_converter.desc": "右键召唤彩色雷电，将击中的生物转为等体积的蟑螂",
+  "item.cockroach.cockroach_spawn_egg": "蟑螂刷怪蛋",
+  "item.cockroach.size_editor": "蟑螂尺寸编辑器",
+  "screen.cockroach.size.title": "编辑蟑螂大小",
+  "screen.cockroach.size.value": "尺寸倍率",
+  "screen.cockroach.size.apply": "应用",
+  "screen.cockroach.size.reset": "恢复 1 倍大小",
+  "screen.cockroach.size.hint": "倍率 0.05～64（模型与碰撞箱同步）",
+  "screen.cockroach.size.invalid": "请输入 0.05 到 64 之间的数字",
+  "screen.cockroach.size.permission": "需要创造模式或管理员权限才能编辑。",
+  "commands.cockroach.no_targets": "未选中任何蟑螂。",
+  "commands.cockroach.flying": "已让 %s 只蟑螂起飞。",
+  "commands.cockroach.resized": "已将 %s 只蟑螂调整为 %s 倍大小。",
+  "commands.cockroach.default_size": "新生成的蟑螂默认为 %s 倍大小。"
+}

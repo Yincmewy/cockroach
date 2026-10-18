@@ -1,0 +1,31 @@
+{
+  "source": "cockroach.glb",
+  "clip": "Take 001",
+  "sourceChannels": 43,
+  "sourceDuration": 0.2916666567325592,
+  "loopDuration": 0.3333333233992259,
+  "frames": 48,
+  "joints": 31,
+  "groundOffsetRange": [
+    0.004462122092183029,
+    0.10735879743073237
+  ],
+  "bytes": 1737920,
+  "lods": [
+    {
+      "file": "cockroach.glb",
+      "vertices": 16236,
+      "triangles": 29454
+    },
+    {
+      "file": "cockroach_medium.glb",
+      "vertices": 2445,
+      "triangles": 3983
+    },
+    {
+      "file": "cockroach_low.glb",
+      "vertices": 567,
+      "triangles": 794
+    }
+  ]
+}

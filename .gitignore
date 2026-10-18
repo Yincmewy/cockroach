@@ -1,0 +1,22 @@
+.gradle/
+build/
+run/
+run-data/
+run-gametest/
+.idea/
+*.iml
+*.log
+run-smoke/
+tools/node_modules/
+
+# 本地原始压缩包与重复依赖；构建所需的 JAR 保留在 libs/。
+/蟑螂_2.zip
+/cockroach.rar
+/Model Loader-1.0.5.jar
+
+# 本机配置与凭据。
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db

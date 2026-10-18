@@ -1,0 +1,53 @@
+[
+  {
+    "name": "cockroach_flight_high.glb",
+    "triangles": 29474,
+    "parts": [
+      "body",
+      "leg_right_front",
+      "leg_right_middle",
+      "leg_right_back",
+      "leg_left_front",
+      "leg_left_middle",
+      "leg_left_back",
+      "elytron_left",
+      "elytron_right",
+      "wing_left",
+      "wing_right"
+    ]
+  },
+  {
+    "name": "cockroach_flight_medium.glb",
+    "triangles": 3999,
+    "parts": [
+      "body",
+      "leg_right_front",
+      "leg_right_middle",
+      "leg_right_back",
+      "leg_left_front",
+      "leg_left_middle",
+      "leg_left_back",
+      "elytron_left",
+      "elytron_right",
+      "wing_left",
+      "wing_right"
+    ]
+  },
+  {
+    "name": "cockroach_flight_low.glb",
+    "triangles": 812,
+    "parts": [
+      "body",
+      "leg_right_front",
+      "leg_right_middle",
+      "leg_right_back",
+      "leg_left_front",
+      "leg_left_middle",
+      "leg_left_back",
+      "elytron_left",
+      "elytron_right",
+      "wing_left",
+      "wing_right"
+    ]
+  }
+]

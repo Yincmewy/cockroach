@@ -1,0 +1,13 @@
+{
+  "name": "cockroach-asset-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lod": "node generate-lods.mjs",
+    "flight": "node generate-flight-models.mjs",
+    "walk": "node generate-walk-animation.mjs"
+  },
+  "devDependencies": {
+    "meshoptimizer": "1.2.0"
+  }
+}

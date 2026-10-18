@@ -1,0 +1,18 @@
+{
+  "entity.cockroach.cockroach": "Cockroach",
+  "entity.cockroach.rainbow_lightning": "Rainbow Lightning",
+  "item.cockroach.cockroach_converter": "Cockroach Converter",
+  "item.cockroach.cockroach_spawn_egg": "Cockroach Spawn Egg",
+  "item.cockroach.size_editor": "Cockroach Size Editor",
+  "screen.cockroach.size.title": "Cockroach Size",
+  "screen.cockroach.size.value": "Size multiplier",
+  "screen.cockroach.size.apply": "Apply",
+  "screen.cockroach.size.reset": "Reset to 1x",
+  "screen.cockroach.size.hint": "Multiplier: 0.05 - 64 (model + hitbox)",
+  "screen.cockroach.size.invalid": "Enter a number between 0.05 and 64",
+  "screen.cockroach.size.permission": "Creative mode or operator permission is required.",
+  "commands.cockroach.no_targets": "No cockroaches matched the selector.",
+  "commands.cockroach.flying": "Started flight for %s cockroach(es).",
+  "commands.cockroach.resized": "Resized %s cockroach(es) to %sx.",
+  "commands.cockroach.default_size": "New cockroaches will spawn at %sx."
+}

@@ -1,0 +1,16 @@
+import fs from 'node:fs';
+import zlib from 'node:zlib';
+const byte = n => Buffer.from([n]);
+const int = n => { const b=Buffer.alloc(4);b.writeInt32BE(n);return b; };
+const string = s => { const b=Buffer.from(s),n=Buffer.alloc(2);n.writeUInt16BE(b.length);return Buffer.concat([n,b]); };
+const tag = (type,name,payload) => Buffer.concat([byte(type),string(name),payload]);
+const compound = fields => Buffer.concat([...fields,byte(0)]);
+const list = (type,values) => Buffer.concat([byte(type),int(values.length),...values]);
+const blocks=[];
+for(let x=0;x<24;x++)for(let z=0;z<24;z++)blocks.push(compound([tag(9,'pos',list(3,[int(x),int(0),int(z)])),tag(3,'state',int(0))]));
+const nbt=tag(10,'',compound([tag(3,'DataVersion',int(3465)),tag(9,'size',list(3,[int(24),int(16),int(24)])),tag(9,'palette',list(10,[compound([tag(8,'Name',string('minecraft:stone'))])])),tag(9,'blocks',list(10,blocks)),tag(9,'entities',list(10,[]))]));
+fs.writeFileSync(new URL('../src/gametest/resources/data/cockroach/structures/flight_arena.nbt',import.meta.url),zlib.gzipSync(nbt));
+const huntBlocks=[];
+for(let x=0;x<48;x++)for(let z=0;z<48;z++)huntBlocks.push(compound([tag(9,'pos',list(3,[int(x),int(0),int(z)])),tag(3,'state',int(0))]));
+const huntNbt=tag(10,'',compound([tag(3,'DataVersion',int(3465)),tag(9,'size',list(3,[int(48),int(40),int(48)])),tag(9,'palette',list(10,[compound([tag(8,'Name',string('minecraft:stone'))])])),tag(9,'blocks',list(10,huntBlocks)),tag(9,'entities',list(10,[]))]));
+fs.writeFileSync(new URL('../src/gametest/resources/data/cockroach/structures/hunt_arena.nbt',import.meta.url),zlib.gzipSync(huntNbt));

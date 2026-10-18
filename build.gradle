@@ -1,0 +1,225 @@
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
+}
+
+group = mod_group_id
+version = mod_version
+base { archivesName = mod_id }
+java { toolchain.languageVersion = JavaLanguageVersion.of(17) }
+jarJar.enable()
+
+sourceSets {
+    main.resources.srcDir 'src/generated/resources'
+    gametest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+configurations {
+    gametestImplementation.extendsFrom implementation
+    gametestRuntimeOnly.extendsFrom runtimeOnly
+}
+
+minecraft {
+    mappings channel: mapping_channel, version: mapping_version
+    copyIdeResources = true
+    runs {
+        configureEach {
+            workingDirectory project.file(project.hasProperty('modelSmokeTest') ? 'run-smoke' : 'run')
+            property 'forge.logging.console.level', 'info'
+            // The dependency contains a production SRG Mixin refmap, even though this mod has no Mixins.
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', file('build/createSrgToMcp/output.srg').absolutePath
+            mods {
+                "${mod_id}" { source sourceSets.main }
+            }
+        }
+        client {
+            if (project.hasProperty('modelSmokeTest')) {
+                property 'cockroach.modelSmokeTest', 'true'
+                property 'cockroach.smokeOutput', file('build/reports/model-smoke').absolutePath
+                mods { "${mod_id}" { source sourceSets.gametest } }
+            }
+        }
+        server { args '--nogui' }
+        gameTestServer {
+            workingDirectory project.file('run-gametest')
+            property 'forge.enabledGameTestNamespaces', mod_id
+            mods {
+                "${mod_id}" { source sourceSets.gametest }
+            }
+        }
+        data {
+            workingDirectory project.file('run-data')
+            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+        }
+    }
+}
+
+repositories {
+    // A module coordinate (not files(...)) lets ForgeGradle remap the supplied SRG jar.
+    flatDir {
+        dirs 'libs'
+        content { includeGroup 'local.modelloader' }
+    }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    implementation fg.deobf("local.modelloader:modelloader:${model_loader_version}")
+    jarJar("local.modelloader:modelloader:${model_loader_version}") {
+        jarJar.ranged(it, model_loader_version_range)
+        jarJar.pin(it, model_loader_version)
+    }
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    def properties = [
+        minecraft_version_range: minecraft_version_range,
+        forge_version_range: forge_version_range,
+        loader_version_range: loader_version_range,
+        model_loader_version_range: model_loader_version_range,
+        mod_id: mod_id, mod_name: mod_name, mod_license: mod_license,
+        mod_version: mod_version, mod_authors: mod_authors, mod_description: mod_description
+    ]
+    inputs.properties properties
+    filesMatching('META-INF/mods.toml') { expand properties }
+}
+
+tasks.named('jar', Jar).configure {
+    archiveClassifier = 'slim'
+    manifest {
+        attributes('Specification-Title': mod_id,
+                   'Specification-Vendor': mod_authors,
+                   'Specification-Version': '1',
+                   'Implementation-Title': project.name,
+                   'Implementation-Version': mod_version,
+                   'Implementation-Vendor': mod_authors)
+    }
+    finalizedBy 'reobfJar'
+}
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+
+// Validate the actual packaged asset without requiring Blender or Python to build.
+tasks.register('verifyModelAssets') {
+    group = 'verification'
+    description = 'Checks the GLB, embedded textures and model attribution.'
+    def model = file('src/main/resources/assets/cockroach/models/entity/cockroach.glb')
+    def credits = file('src/main/resources/MODEL_CREDITS.md')
+    inputs.files(model, credits)
+    doLast {
+        byte[] bytes = model.bytes
+        def buffer = java.nio.ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        if (bytes.length < 20 || buffer.getInt(0) != 0x46546c67 || buffer.getInt(4) != 2 || buffer.getInt(8) != bytes.length) {
+            throw new GradleException('Invalid glTF 2.0 binary header')
+        }
+        int jsonLength = buffer.getInt(12)
+        if (jsonLength < 0 || 20L + jsonLength > bytes.length || buffer.getInt(16) != 0x4e4f534a) {
+            throw new GradleException('Invalid GLB JSON chunk')
+        }
+        def gltf = new groovy.json.JsonSlurper().parseText(new String(bytes, 20, jsonLength, java.nio.charset.StandardCharsets.UTF_8))
+        if (!gltf.meshes || !gltf.images || gltf.images.any { it.uri || it.bufferView == null }) {
+            throw new GradleException('Expected meshes and self-contained embedded textures')
+        }
+        if (!credits.text.contains('CC BY 4.0') || !credits.text.contains('CK')) {
+            throw new GradleException('Missing original model attribution')
+        }
+        logger.lifecycle("Verified GLB: ${gltf.meshes.size()} mesh, ${gltf.images.size()} embedded textures, ${(gltf.animations ?: []).size()} source animation (skinning not supported by Model Loader0 1.0.5)")
+    }
+}
+tasks.named('check') { dependsOn 'verifyModelAssets' }
+
+// The unclassified artifact is the installable all-in-one mod; slim is for development only.
+tasks.named('jarJar').configure {
+    archiveClassifier = ''
+    finalizedBy 'reobfJarJar'
+}
+tasks.named('build') { dependsOn 'jarJar' }
+
+
+tasks.register('verifyLodAssets') {
+    group = 'verification'
+    inputs.files(fileTree('src/main/resources/assets/cockroach/models/entity'))
+    doLast {
+        ['cockroach_medium.glb':3983, 'cockroach_low.glb':794].each { name, expected ->
+            byte[] bytes = file("src/main/resources/assets/cockroach/models/entity/${name}").bytes
+            def b = java.nio.ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+            if (b.getInt(0) != 0x46546c67 || b.getInt(4) != 2 || b.getInt(8) != bytes.length) throw new GradleException("Bad GLB: ${name}")
+            int jsonLength = b.getInt(12)
+            def g = new groovy.json.JsonSlurper().parseText(new String(bytes, 20, jsonLength, java.nio.charset.StandardCharsets.UTF_8))
+            if (g.images.size() != 1 || g.images[0].uri || g.images[0].bufferView == null) throw new GradleException("LOD texture must be embedded: ${name}")
+            def imageView = g.bufferViews[g.images[0].bufferView]
+            int start = 28 + jsonLength + (imageView.byteOffset ?: 0)
+            if (start + imageView.byteLength > bytes.length || bytes[start] != (byte)0x89 || bytes[start+1] != (byte)0x50) throw new GradleException("Missing embedded PNG: ${name}")
+            int indices = g.accessors[g.meshes[0].primitives[0].indices].count
+            if (indices != expected * 3) throw new GradleException("Unexpected triangle count: ${name}")
+        }
+    }
+}
+tasks.register('verifyBundledLoader') {
+    group = 'verification'
+    dependsOn 'jarJar', 'reobfJarJar'
+    doLast {
+        def archive = tasks.named('jarJar').get().archiveFile.get().asFile
+        new java.util.zip.ZipFile(archive).withCloseable { zip ->
+            def meta = new groovy.json.JsonSlurper().parse(zip.getInputStream(zip.getEntry('META-INF/jarjar/metadata.json')))
+            def dependency = meta.jars.find { it.identifier.artifact == 'modelloader' }
+            if (dependency == null || dependency.version.artifactVersion != model_loader_version) throw new GradleException('Bundled loader metadata missing')
+            byte[] nested = zip.getInputStream(zip.getEntry(dependency.path)).bytes
+            if (!java.util.Arrays.equals(nested, file("libs/modelloader-${model_loader_version}.jar").bytes)) throw new GradleException('Nested loader was modified or remapped')
+            if (zip.getEntry('THIRD_PARTY_NOTICES.md') == null) throw new GradleException('Missing third-party notices')
+            if (zip.entries().find { it.name.contains('gametest/') || it.name.endsWith('ModelSmokeTest.class') }) throw new GradleException('Test classes leaked into release')
+            logger.lifecycle("Verified bundled Model Loader0 ${model_loader_version}: exact original JAR")
+        }
+    }
+}
+tasks.named('check') { dependsOn 'verifyLodAssets', 'verifyBundledLoader' }
+
+tasks.register('verifyFlightAssets') {
+    group = 'verification'
+    inputs.files(fileTree('src/main/resources/assets/cockroach/models/entity') { include 'cockroach_flight_*.glb' })
+    doLast {
+        [high:29474, medium:3999, low:812].each { tier, expected ->
+            byte[] bytes = file("src/main/resources/assets/cockroach/models/entity/cockroach_flight_${tier}.glb").bytes
+            def b = java.nio.ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+            if (b.getInt(0) != 0x46546c67 || b.getInt(4) != 2 || b.getInt(8) != bytes.length) throw new GradleException("Bad flight GLB: ${tier}")
+            int jsonLength = b.getInt(12)
+            def g = new groovy.json.JsonSlurper().parseText(new String(bytes, 20, jsonLength, java.nio.charset.StandardCharsets.UTF_8))
+            def names = g.nodes.collect { it.name }
+            if (names.size() != 11 || !names.containsAll(['body', 'elytron_left', 'elytron_right', 'wing_left', 'wing_right'])) throw new GradleException("Incomplete flight rig: ${tier}")
+            if (g.images.size() != 2 || g.images.any { it.uri || it.bufferView == null }) throw new GradleException("Missing embedded flight textures: ${tier}")
+            if (g.meshes.sum { g.accessors[it.primitives[0].indices].count } != expected * 3) throw new GradleException("Unexpected flight triangle count: ${tier}")
+            if (g.materials[1].alphaMode != 'BLEND' || !g.materials[1].doubleSided) throw new GradleException('Hindwing membranes must be translucent and double-sided')
+        }
+    }
+}
+tasks.named('check') { dependsOn 'verifyFlightAssets' }
+
+tasks.register('verifyWalkAnimation') {
+    group = 'verification'
+    def cache = file('src/main/resources/assets/cockroach/models/entity/cockroach_walk.bin')
+    inputs.file(cache)
+    doLast {
+        def data = java.nio.ByteBuffer.wrap(cache.bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        if (data.getInt() != 0x314b5743 || data.getInt() != 48 || data.getInt() != 31) throw new GradleException('Invalid original walk animation cache')
+        if (Math.abs(data.getFloat() - 1.0F / 3.0F) > 0.0001F || data.getInt() != 3) throw new GradleException('Invalid walk loop/LOD metadata')
+        (48 * 31 * 16).times { if (!Float.isFinite(data.getFloat())) throw new GradleException('Non-finite bone pose') }
+        [[16236,88362], [2445,11949], [567,2382]].each { expected ->
+            int vertices = data.getInt(), indices = data.getInt()
+            if (vertices != expected[0] || indices != expected[1]) throw new GradleException('Walk geometry does not match ground LOD')
+            vertices.times {
+                8.times { if (!Float.isFinite(data.getFloat())) throw new GradleException('Invalid walk vertex') }
+                4.times { float joint = data.getFloat(); if (joint < 0 || joint >= 31 || joint != (int)joint) throw new GradleException('Invalid skin joint') }
+                float total = 0
+                4.times { float weight = data.getFloat(); if (!Float.isFinite(weight) || weight < 0 || weight > 1) throw new GradleException('Invalid skin weight'); total += weight }
+                if (Math.abs(total - 1) > 0.001F) throw new GradleException('Unnormalized skin weights')
+            }
+            indices.times { int index = data.getInt(); if (index < 0 || index >= vertices) throw new GradleException('Invalid walk triangle') }
+        }
+        if (data.hasRemaining()) throw new GradleException('Unexpected trailing walk animation data')
+    }
+}
+tasks.named('check') { dependsOn 'verifyWalkAnimation' }
